@@ -2,9 +2,9 @@ import time
 import network
 import machine
 from machine import (
+    DEEPSLEEP,
     RTC,
     ADC,
-    DEEPSLEEP,
     Pin
 )
 from config import CONFIG
@@ -95,6 +95,7 @@ if __name__ == '__main__':
 
     sta_if = network.WLAN(network.STA_IF)
     sta_if.active(True)
+    debug = CONFIG['debug']
     service = Service()
 
     connected = False
@@ -108,6 +109,14 @@ if __name__ == '__main__':
     while connected:
         report = service.get_sensor_data()
         report.notify()
+    else:
+        while True:
+            if debug:
+                print("Connected!")
 
-        service.led_status()
-        service.sleep(CONFIG['sleep']['connected'])
+            # report = service.get_sensor_data()
+            # report.notify()
+
+            print('getting status')
+            service.status()
+            time.sleep_ms(CONFIG['sleep']['connected'])
