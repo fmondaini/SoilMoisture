@@ -98,10 +98,6 @@ class Service(object):
         # put the device to sleep
         machine.deepsleep()
 
-    def sleep(self, milliseconds):
-        # put the device to sleep but keeping wlan working.
-        machine.deepsleep(milliseconds)
-
 
 if __name__ == '__main__':
     rtc = RTC()
