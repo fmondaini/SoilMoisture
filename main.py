@@ -89,10 +89,7 @@ class Service(object):
 
         return self.is_connected()
 
-    def is_connected(self):
-        return self.sta_if.isconnected()
-
-    def status(self):
+    def led_status(self):
         """
         Report status using the built-in led from the NodeMCU
             - Fast blink: Connecting
@@ -145,9 +142,9 @@ if __name__ == '__main__':
             report = service.get_sensor_data()
             report.notify(service.is_connected())
 
-            print('getting status')
-            service.status()
-            time.sleep_ms(CONFIG['sleep']['connected'])
+            # print('LED Status')
+            # service.led_status()
+            # time.sleep_ms(CONFIG['sleep']['connected'])
 
             print('going to deepsleep')
             service.deepsleep(rtc, CONFIG['sleep']['connected'])
