@@ -35,8 +35,22 @@ class Service(object):
     """
     Web service to manage the device
     """
+    PINOUT = {
+        'D0': 16,
+        'D1': 5,
+        'D2': 4,
+        'D3': 0,
+        'D4': 2,
+        'D5': 14,
+        'D6': 12,
+        'D7': 13,
+        'D8': 15,
+        'D9': 3,
+        'D10': 1,
+    }
+
     def __init__(self, *args, **kwargs):
-        self.pin = Pin(2, Pin.OUT)
+        self.pin = Pin(self.PINOUT['D4'], Pin.OUT)
         self.adc = ADC(0)
         self.sta_if = network.WLAN(network.STA_IF)
         self.sta_if.active(True)
