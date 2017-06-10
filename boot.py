@@ -4,7 +4,7 @@ import gc
 import webrepl
 
 esp.osdebug(None)
-esp.sleep_type(esp.SLEEP_LIGHT)
+# esp.sleep_type(esp.SLEEP_LIGHT)
 
 webrepl.start()
 gc.collect()

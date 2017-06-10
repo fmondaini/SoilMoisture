@@ -1,5 +1,8 @@
+KEY = 'change-me'
+THINGSPEAK_URL = 'https://api.thingspeak.com/update?api_key=%s&field1=' % KEY
 CONFIG = {
     'debug': True,
+    'thingspeak_url': THINGSPEAK_URL,
     'wifi': {
         'essid': 'network_name',
         'password': 'pass',
