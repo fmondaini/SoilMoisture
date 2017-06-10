@@ -1,12 +1,13 @@
 import time
 import network
-import machine
+import urequests
 from machine import (
     DEEPSLEEP,
     RTC,
     ADC,
     Pin
 )
+import machine
 from config import CONFIG
 
 
@@ -22,9 +23,12 @@ class Report(object):
         self.message = message
         super(Report, self).__init__(*args, **kwargs)
 
-    def notify(self):
-        # TODO:
+    def notify(self, is_connected):
         print("Sender: %s\nMessage: %s" % (self.sender, self.message))
+        if self.sender == 'sensor' and is_connected:
+            url = '%s%s' % (CONFIG['thingspeak_url'], self.message)
+            result = urequests.get(url)
+            print(result.text)
 
 
 class Service(object):
@@ -41,13 +45,15 @@ class Service(object):
     def _toggle(self):
         self.pin.value(not self.pin.value())
 
+    def is_connected(self):
+        return self.sta_if.isconnected()
+
     def get_sensor_data(self):
         """
         returns Report
         """
         data = {
             "message": self.adc.read(),
-            # "sender": Report.SENSOR
             "sender": "sensor",
         }
         return Report(**data)
@@ -117,8 +123,8 @@ if __name__ == '__main__':
             if debug:
                 print("Connected!")
 
-            # report = service.get_sensor_data()
-            # report.notify()
+            report = service.get_sensor_data()
+            report.notify(service.is_connected())
 
             print('getting status')
             service.status()
