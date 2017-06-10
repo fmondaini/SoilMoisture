@@ -111,6 +111,11 @@ if __name__ == '__main__':
     service = Service()
     connected = service.connect()
 
+    if machine.reset_cause() == machine.DEEPSLEEP_RESET:
+        print('woke from a deep sleep')
+    else:
+        print('power on or hard reset')
+
     while service.is_connected is False:
         print("NOT Connected!")
         service.led_status()
@@ -129,3 +134,6 @@ if __name__ == '__main__':
             print('getting status')
             service.status()
             time.sleep_ms(CONFIG['sleep']['connected'])
+
+            print('going to deepsleep')
+            service.deepsleep(rtc, CONFIG['sleep']['connected'])
