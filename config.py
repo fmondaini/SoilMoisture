@@ -1,8 +1,11 @@
 KEY = 'change-me'
 THINGSPEAK_URL = 'https://api.thingspeak.com/update?api_key=%s&field1=' % KEY
+IFTTT_URL = ''
+
 CONFIG = {
     'debug': True,
     'thingspeak_url': THINGSPEAK_URL,
+    'ifttt_url': IFTTT_URL,
     'wifi': {
         'essid': 'network_name',
         'password': 'pass',
@@ -12,7 +15,7 @@ CONFIG = {
         }
     },
     'sleep': {
-        'connected': 30000,
+        'connected': 360000,
         'not_connected': 3000
     }
 }

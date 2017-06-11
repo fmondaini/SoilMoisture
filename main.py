@@ -1,4 +1,5 @@
 import time
+import ujson
 import network
 import urequests
 from machine import (
@@ -25,10 +26,17 @@ class Report(object):
 
     def notify(self, is_connected):
         print("Sender: %s\nMessage: %s" % (self.sender, self.message))
+
         if self.sender == 'sensor' and is_connected:
-            url = '%s%s' % (CONFIG['thingspeak_url'], self.message)
-            result = urequests.get(url)
-            print(result.text)
+            data = {
+                'value1': str(self.message),
+            }
+            result = urequests.post(CONFIG['iftt_url'], data=ujson.dumps(data))
+
+            if result.status_code == 200:
+                print('Notification successful')
+            else:
+                print('Notification failed')
 
 
 class Service(object):
