@@ -141,17 +141,10 @@ if __name__ == '__main__':
             time.sleep_ms(CONFIG['sleep']['not_connected'])
 
     else:
-        while True:
-            if debug:
-                print("Connected!")
         service.status_pin(False)  # LED polarity inverted on NodeMCU
 
-            report = service.get_sensor_data()
-            report.notify(service.is_connected())
+        report = service.get_sensor_data()
+        report.notify(service.is_connected())
 
-            # print('LED Status')
-            # service.led_status()
-            # time.sleep_ms(CONFIG['sleep']['connected'])
-
-            print('going to deepsleep')
-            service.deepsleep(rtc, CONFIG['sleep']['connected'])
+        print('going to deepsleep')
+        service.deepsleep(rtc, CONFIG['sleep']['connected'])
