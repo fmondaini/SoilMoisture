@@ -58,14 +58,22 @@ class Service(object):
     }
 
     def __init__(self, *args, **kwargs):
-        self.pin = Pin(self.PINOUT['D4'], Pin.OUT)
-        self.adc = ADC(0)
+        self.status_pin = Pin(self.PINOUT['D4'], Pin.OUT)
+        self.status_pin(0)
+
+        self.analog_pin = ADC(0)
+
+        self.sensor_vcc_pin = Pin(self.PINOUT['D2'], Pin.OUT)
+        self.sensor_vcc_pin(1)
+
         self.sta_if = network.WLAN(network.STA_IF)
         self.sta_if.active(True)
+
         super(Service, self).__init__(*args, **kwargs)
 
-    def _toggle(self):
-        self.pin.value(not self.pin.value())
+    def toggle_status_led(self):
+        self.status_pin.value(not self.status_pin.value())
+        time.sleep_ms(100)
 
     def is_connected(self):
         return self.sta_if.isconnected()
@@ -75,16 +83,10 @@ class Service(object):
         returns Report
         """
         data = {
-            "message": self.adc.read(),
+            "message": self.analog_pin.read(),
             "sender": "sensor",
         }
         return Report(**data)
-
-    def get_battery_status(self):
-        """
-        returns: Report
-        """
-        return Report()
 
     def connect(self):
         """
@@ -97,15 +99,12 @@ class Service(object):
 
         return self.is_connected()
 
-    def led_status(self):
+    def get_battery_status(self):
         """
-        Report status using the built-in led from the NodeMCU
-            - Fast blink: Connecting
-            - Slow blink: Connected
+        TODO: Reads battery voltage
+        returns: Report
         """
-        connected = self.is_connected()
-        self._toggle()
-        time.sleep_ms(CONFIG['wifi']['status'][connected])
+        return Report()
 
     def get_information(self):
         return {
@@ -136,8 +135,7 @@ if __name__ == '__main__':
         print('power on or hard reset')
 
     while service.is_connected is False:
-        print("NOT Connected!")
-        service.led_status()
+        service.toggle_status_led()
         connected = service.connect()
         if not connected:
             time.sleep_ms(CONFIG['sleep']['not_connected'])
@@ -146,6 +144,7 @@ if __name__ == '__main__':
         while True:
             if debug:
                 print("Connected!")
+        service.status_pin(False)  # LED polarity inverted on NodeMCU
 
             report = service.get_sensor_data()
             report.notify(service.is_connected())
