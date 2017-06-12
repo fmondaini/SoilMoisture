@@ -74,16 +74,6 @@ class Service(object):
     def is_connected(self):
         return self.sta_if.isconnected()
 
-    def get_sensor_data(self):
-        """
-        returns Report
-        """
-        data = {
-            "message": self.analog_pin.read(),
-            "sender": "sensor",
-        }
-        return Report(**data)
-
     def connect(self):
         """
         Connects to the AP
@@ -94,6 +84,26 @@ class Service(object):
             CONFIG['wifi']['password'])
 
         return self.is_connected()
+
+    def deepsleep(self, rtc, milliseconds):
+        # configure RTC.ALARM0 to be able to wake the device
+        rtc.irq(trigger=rtc.ALARM0, wake=DEEPSLEEP)
+
+        # set RTC.ALARM0 to fire after the given seconds (waking the device)
+        rtc.alarm(rtc.ALARM0, milliseconds)
+
+        # put the device to sleep
+        machine.deepsleep()
+
+    def get_sensor_data(self):
+        """
+        returns Report
+        """
+        data = {
+            "message": self.analog_pin.read(),
+            "sender": "sensor",
+        }
+        return Report(**data)
 
     def get_battery_status(self):
         """
@@ -107,16 +117,6 @@ class Service(object):
             'is_connected': self.is_connected(),
             'ifconfig': self.sta_if.ifconfig()
         }
-
-    def deepsleep(self, rtc, milliseconds):
-        # configure RTC.ALARM0 to be able to wake the device
-        rtc.irq(trigger=rtc.ALARM0, wake=DEEPSLEEP)
-
-        # set RTC.ALARM0 to fire after the given seconds (waking the device)
-        rtc.alarm(rtc.ALARM0, milliseconds)
-
-        # put the device to sleep
-        machine.deepsleep()
 
 
 if __name__ == '__main__':
