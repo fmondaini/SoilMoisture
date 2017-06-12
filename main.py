@@ -1,7 +1,6 @@
 import time
 import ujson
 import network
-import urequests
 from machine import (
     DEEPSLEEP,
     RTC,
@@ -9,6 +8,8 @@ from machine import (
     Pin
 )
 import machine
+from umqtt.simple import MQTTClient
+
 from config import CONFIG
 
 
@@ -24,19 +25,14 @@ class Report(object):
         self.message = message
         super(Report, self).__init__(*args, **kwargs)
 
-    def notify(self, is_connected):
+    def notify(self, mqttclient, is_connected):
         print("Sender: %s\nMessage: %s" % (self.sender, self.message))
 
         if self.sender == 'sensor' and is_connected:
             data = {
                 'value1': str(self.message),
             }
-            result = urequests.post(CONFIG['iftt_url'], data=ujson.dumps(data))
-
-            if result.status_code == 200:
-                print('Notification successful')
-            else:
-                print('Notification failed')
+            mqttclient.publish(data=ujson.dumps(data))
 
 
 class Service(object):
@@ -141,10 +137,16 @@ if __name__ == '__main__':
             time.sleep_ms(CONFIG['sleep']['not_connected'])
 
     else:
-        service.status_pin(False)  # LED polarity inverted on NodeMCU
+        service.status_pin(False)  # Turns on built in LED
+
+        mqttclient = MQTTClient('esp',
+                                CONFIG['cloudmqtt']['server'],
+                                CONFIG['cloudmqtt']['port'],
+                                CONFIG['cloudmqtt']['user'],
+                                CONFIG['cloudmqtt']['password'])
 
         report = service.get_sensor_data()
-        report.notify(service.is_connected())
+        report.notify(service.is_connected(), mqttclient)
 
         print('going to deepsleep')
         service.deepsleep(rtc, CONFIG['sleep']['connected'])

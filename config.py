@@ -1,11 +1,11 @@
-KEY = 'change-me'
-THINGSPEAK_URL = 'https://api.thingspeak.com/update?api_key=%s&field1=' % KEY
-IFTTT_URL = ''
-
 CONFIG = {
     'debug': True,
-    'thingspeak_url': THINGSPEAK_URL,
-    'ifttt_url': IFTTT_URL,
+    'cloudmqtt': {
+        'server': '',
+        'user': '',
+        'password': '',
+        'port': ''
+    },
     'wifi': {
         'essid': 'network_name',
         'password': 'pass',
