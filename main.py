@@ -32,6 +32,7 @@ class Report(object):
             data = {
                 'value1': str(self.message),
             }
+            mqttclient.connect()
             mqttclient.publish(data=ujson.dumps(data))
 
 
