@@ -1,7 +1,6 @@
 import time
 import ujson
 import network
-import urequests
 from machine import (
     DEEPSLEEP,
     RTC,
@@ -9,6 +8,8 @@ from machine import (
     Pin
 )
 import machine
+from umqtt.simple import MQTTClient
+
 from config import CONFIG
 
 
@@ -24,19 +25,15 @@ class Report(object):
         self.message = message
         super(Report, self).__init__(*args, **kwargs)
 
-    def notify(self, is_connected):
+    def notify(self, mqttclient, is_connected):
         print("Sender: %s\nMessage: %s" % (self.sender, self.message))
 
         if self.sender == 'sensor' and is_connected:
             data = {
                 'value1': str(self.message),
             }
-            result = urequests.post(CONFIG['iftt_url'], data=ujson.dumps(data))
-
-            if result.status_code == 200:
-                print('Notification successful')
-            else:
-                print('Notification failed')
+            mqttclient.connect()
+            mqttclient.publish(data=ujson.dumps(data))
 
 
 class Service(object):
@@ -78,16 +75,6 @@ class Service(object):
     def is_connected(self):
         return self.sta_if.isconnected()
 
-    def get_sensor_data(self):
-        """
-        returns Report
-        """
-        data = {
-            "message": self.analog_pin.read(),
-            "sender": "sensor",
-        }
-        return Report(**data)
-
     def connect(self):
         """
         Connects to the AP
@@ -98,6 +85,26 @@ class Service(object):
             CONFIG['wifi']['password'])
 
         return self.is_connected()
+
+    def deepsleep(self, rtc, milliseconds):
+        # configure RTC.ALARM0 to be able to wake the device
+        rtc.irq(trigger=rtc.ALARM0, wake=DEEPSLEEP)
+
+        # set RTC.ALARM0 to fire after the given seconds (waking the device)
+        rtc.alarm(rtc.ALARM0, milliseconds)
+
+        # put the device to sleep
+        machine.deepsleep()
+
+    def get_sensor_data(self):
+        """
+        returns Report
+        """
+        data = {
+            "message": self.analog_pin.read(),
+            "sender": "sensor",
+        }
+        return Report(**data)
 
     def get_battery_status(self):
         """
@@ -111,16 +118,6 @@ class Service(object):
             'is_connected': self.is_connected(),
             'ifconfig': self.sta_if.ifconfig()
         }
-
-    def deepsleep(self, rtc, milliseconds):
-        # configure RTC.ALARM0 to be able to wake the device
-        rtc.irq(trigger=rtc.ALARM0, wake=DEEPSLEEP)
-
-        # set RTC.ALARM0 to fire after the given seconds (waking the device)
-        rtc.alarm(rtc.ALARM0, milliseconds)
-
-        # put the device to sleep
-        machine.deepsleep()
 
 
 if __name__ == '__main__':
@@ -141,10 +138,16 @@ if __name__ == '__main__':
             time.sleep_ms(CONFIG['sleep']['not_connected'])
 
     else:
-        service.status_pin(False)  # LED polarity inverted on NodeMCU
+        service.status_pin(False)  # Turns on built in LED
+
+        mqttclient = MQTTClient('esp',
+                                CONFIG['cloudmqtt']['server'],
+                                CONFIG['cloudmqtt']['port'],
+                                CONFIG['cloudmqtt']['user'],
+                                CONFIG['cloudmqtt']['password'])
 
         report = service.get_sensor_data()
-        report.notify(service.is_connected())
+        report.notify(service.is_connected(), mqttclient)
 
         print('going to deepsleep')
         service.deepsleep(rtc, CONFIG['sleep']['connected'])
